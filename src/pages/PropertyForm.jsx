@@ -14,15 +14,32 @@ export default function PropertyForm() {
 
     const [loading, setLoading] = useState(false);
     const [loadingProperty, setLoadingProperty] = useState(true);
+    const [userRole, setUserRole] = useState(""); // <-- guardamos el rol
 
     const API_URL = "https://inmobiliarymgmt-production.up.railway.app/api/Property";
     const token = localStorage.getItem("token");
 
-    // Cargar propiedad si es edición
+    // Función para decodificar JWT
+    const decodeToken = (token) => {
+        if (!token) return null;
+        try {
+            const payload = token.split(".")[1];
+            return JSON.parse(atob(payload));
+        } catch {
+            return null;
+        }
+    };
+
+    // Cargar rol del usuario y propiedad si es edición
     useEffect(() => {
         if (!token) {
             navigate("/login");
             return;
+        }
+
+        const decoded = decodeToken(token);
+        if (decoded && decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]) {
+            setUserRole(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]);
         }
 
         if (!id) {
@@ -100,31 +117,35 @@ export default function PropertyForm() {
 
             <h1>{id ? "Editar Propiedad" : "Crear Propiedad"}</h1>
 
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label>Título</label><br />
-                    <input type="text" name="title" value={form.title} onChange={handleChange} required />
-                </div>
+            {userRole === "Admin" ? (
+                <form onSubmit={handleSubmit}>
+                    <div>
+                        <label>Título</label><br />
+                        <input type="text" name="title" value={form.title} onChange={handleChange} required />
+                    </div>
 
-                <div>
-                    <label>Dirección</label><br />
-                    <input type="text" name="address" value={form.address} onChange={handleChange} required />
-                </div>
+                    <div>
+                        <label>Dirección</label><br />
+                        <input type="text" name="address" value={form.address} onChange={handleChange} required />
+                    </div>
 
-                <div>
-                    <label>Precio</label><br />
-                    <input type="number" name="price" value={form.price} onChange={handleChange} required />
-                </div>
+                    <div>
+                        <label>Precio</label><br />
+                        <input type="number" name="price" value={form.price} onChange={handleChange} required />
+                    </div>
 
-                <div>
-                    <label>Descripción</label><br />
-                    <textarea name="description" value={form.description} onChange={handleChange} rows="4"></textarea>
-                </div>
+                    <div>
+                        <label>Descripción</label><br />
+                        <textarea name="description" value={form.description} onChange={handleChange} rows="4"></textarea>
+                    </div>
 
-                <button type="submit" disabled={loading}>
-                    {loading ? "Guardando..." : id ? "Actualizar" : "Crear"}
-                </button>
-            </form>
+                    <button type="submit" disabled={loading}>
+                        {loading ? "Guardando..." : id ? "Actualizar" : "Crear"}
+                    </button>
+                </form>
+            ) : (
+                <p>No tienes permisos para crear o editar propiedades.</p>
+            )}
         </div>
     );
 }

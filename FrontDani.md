@@ -19,6 +19,7 @@ AppRouter.jsx – Define rutas del proyecto usando react-router-dom
 
 App principal:
 
+````
 import AppRouter from "./router/AppRouter";
 
 function App() {
@@ -26,11 +27,13 @@ return <AppRouter />;
 }
 
 export default App;
+````
 
 2. Configuración de rutas (AppRouter.jsx)
 
 Rutas principales:
- ````bash
+
+````bash
 <BrowserRouter>
     <Routes>
         <Route path="/login" element={<Login />} />
@@ -42,6 +45,7 @@ Rutas principales:
     </Routes>
 </BrowserRouter>
 ````
+
 3. Autenticación
 
 Login.jsx:
@@ -72,9 +76,21 @@ Link a detalle (/properties/:id)
 
 Botón para editar (/properties/edit/:id)
 
-Autenticación:
+Botón para eliminar
 
-Si el usuario no tiene token, redirige a login (si lo agregamos en versiones futuras).
+Búsqueda:
+
+Campo para buscar propiedad por ID
+
+Autenticación y roles:
+
+Se obtiene el token del localStorage.
+
+Decodifica el token para obtener el rol (Admin o Cliente).
+
+Solo usuarios con rol Admin pueden ver botones Crear, Editar y Eliminar.
+
+Usuarios sin token se redirigen a /login.
 
 5. PropertyDetail.jsx
 
@@ -108,30 +124,41 @@ PUT si es edición
 
 Envía token en header Authorization
 
-Botón “Cerrar sesión”
+Botones:
 
-Botón “Volver a lista” 
+“Cerrar sesión”
+
+“Volver a lista”
 
 Carga de datos en edición:
 
-Si existe id en la URL, hace fetch de la propiedad para llenar formulario.
+Si existe id en la URL, hace fetch de la propiedad para llenar formulario
+
+Autorización:
+
+Solo los usuarios con rol Admin deberían poder crear/editar propiedades
+
+Actualmente, debido al error del backend, todos los fetch de creación/edición devuelven 401, aunque el frontend tiene la lógica para Admin.
+
+Botones y formularios están creados pero no accesibles a clientes ni funcionales mientras el backend no permita autorización.
 
 7. Tokens y autorización
 
-Todos los fetch que requieren modificación (POST/PUT) incluyen el token en el header Authorization.
+Todos los fetch que requieren modificación (POST/PUT/DELETE) incluyen el token en el header Authorization.
 
 Token se obtiene del login y se guarda en localStorage.
 
 Si no hay token, se redirige a /login.
 
+El rol del usuario se obtiene decodificando el token (userRole).
+
 8. Observaciones
 
-Problema pendiente:
+Se implementó control de rol en frontend: solo Admin puede ver y usar botones Crear, Editar y Eliminar.
 
-El backend está devolviendo 401 Unauthorized al guardar propiedad, incluso con token.
+Debido a problemas en el backend (401 Unauthorized), los botones de Edit, Delete y Create no funcionan, aunque están creados y visibles solo para Admin.
 
-Por ahora, se agregaron botones de navegación para poder moverse sin depender del backend.
-
+Mejoras de usabilidad agregadas: botón “Volver a la lista” en detalle y form.
 
 9. Próximos pasos sugeridos
 
