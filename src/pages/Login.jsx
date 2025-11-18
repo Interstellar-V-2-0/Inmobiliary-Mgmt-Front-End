@@ -1,4 +1,4 @@
-//Esto es provisiona Gero, no podia probar mi front si no tenia el token de autenticacion
+// Esto es provisional Gero, no podía probar mi front si no tenía el token de autenticación
 
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -18,7 +18,9 @@ export default function Login() {
         try {
             const res = await fetch(API_URL, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: {
+                    "Content-Type": "application/json"
+                },
                 body: JSON.stringify({ email, password })
             });
 
@@ -27,8 +29,20 @@ export default function Login() {
             }
 
             const data = await res.json();
-            localStorage.setItem("token", data.token); // Guardamos token
-            navigate("/properties"); // Redirige a lista de propiedades
+
+            // ❤ DEBUG: ver exactamente qué devuelve el backend
+            console.log("LOGIN RESPONSE:", data);
+
+            // Ajustar aquí cuando veamos qué propiedad contiene el token real
+            const token = data.token || data.accessToken || data.result || data.authToken || null;
+
+            if (!token) {
+                throw new Error("El backend no devolvió un token válido");
+            }
+
+            localStorage.setItem("token", token);
+            navigate("/properties");
+
         } catch (err) {
             setError(err.message);
         }

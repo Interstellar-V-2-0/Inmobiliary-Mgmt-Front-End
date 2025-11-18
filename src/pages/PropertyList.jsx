@@ -5,12 +5,12 @@ export default function PropertyList() {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchId, setSearchId] = useState("");
-    const [userRole, setUserRole] = useState(""); // <-- guardamos el rol
+    const [userRole, setUserRole] = useState("");
     const navigate = useNavigate();
 
     const token = localStorage.getItem("token");
 
-    // Función para decodificar JWT
+    // ----- Decodificar JWT -----
     const decodeToken = (token) => {
         if (!token) return null;
         try {
@@ -21,15 +21,20 @@ export default function PropertyList() {
         }
     };
 
+    // ----- Validar token y extraer rol -----
     useEffect(() => {
         if (!token) navigate("/login");
 
         const decoded = decodeToken(token);
-        if (decoded && decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]) {
-            setUserRole(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"]);
+
+        const roleClaim = "http://schemas.microsoft.com/ws/2008/06/identity/claims/role";
+
+        if (decoded && decoded[roleClaim]) {
+            setUserRole(decoded[roleClaim]); // Admin o Client
         }
     }, [token, navigate]);
 
+    // ----- Obtener propiedades -----
     const fetchProperties = async (id = null) => {
         setLoading(true);
         try {
@@ -44,6 +49,8 @@ export default function PropertyList() {
             if (!response.ok) throw new Error("Error al obtener propiedades");
 
             const data = await response.json();
+
+            // API devuelve array o 1 solo objeto
             setProperties(Array.isArray(data) ? data : [data]);
         } catch (error) {
             console.error("Error fetching properties:", error);
@@ -57,11 +64,13 @@ export default function PropertyList() {
         if (token) fetchProperties();
     }, [token]);
 
+    // ----- Logout -----
     const handleLogout = () => {
         localStorage.removeItem("token");
         navigate("/login");
     };
 
+    // ----- Buscar -----
     const handleSearch = () => {
         if (searchId.trim() === "") {
             fetchProperties();
@@ -70,6 +79,7 @@ export default function PropertyList() {
         }
     };
 
+    // ----- Eliminar -----
     const handleDelete = async (id) => {
         if (!window.confirm("¿Estás seguro de eliminar esta propiedad?")) return;
 
@@ -84,7 +94,6 @@ export default function PropertyList() {
 
             if (!response.ok) throw new Error("Error al eliminar propiedad");
 
-            // Actualizar lista sin la propiedad eliminada
             setProperties(properties.filter((p) => p.id !== id));
         } catch (error) {
             console.error("Error eliminando propiedad:", error);
@@ -97,6 +106,7 @@ export default function PropertyList() {
         <div>
             <h1>Lista de propiedades</h1>
 
+            {/* Botones superiores */}
             <div style={{ marginBottom: "20px" }}>
                 {userRole === "Admin" && (
                     <button onClick={() => navigate("/properties/create")}>
@@ -108,6 +118,7 @@ export default function PropertyList() {
                 </button>
             </div>
 
+            {/* Search */}
             <div style={{ marginBottom: "20px" }}>
                 <input
                     type="text"
@@ -120,6 +131,7 @@ export default function PropertyList() {
                 </button>
             </div>
 
+            {/* Listado */}
             {properties.length === 0 ? (
                 <p>No hay propiedades registradas.</p>
             ) : (
@@ -129,6 +141,8 @@ export default function PropertyList() {
                             <Link to={`/properties/${p.id}`}>
                                 <strong>{p.title}</strong> — {p.address} — ${p.price}
                             </Link>
+
+                            {/* Controles solo para Admin */}
                             {userRole === "Admin" && (
                                 <>
                                     <button
